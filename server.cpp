@@ -1,40 +1,39 @@
 #include <iostream>
 #include <fstream>
-#include <cstring>
-#include <sys/socket.h>
-#include <arpa/inet.h>
+#include <string.h>
 #include <unistd.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 
 #define PORT 8080
 
 void handleUpload(int new_socket) {
     char filename[1024] = {0};
-    read(new_socket, filename, 1024);
-    std::cout << "Receiving file: " << filename << std::endl;
+    read(new_socket, filename, 1024);  // Receive filename from client
 
     std::ofstream outfile(filename, std::ios::binary);
     if (!outfile) {
-        std::cerr << "Failed to create file\n";
+        std::cerr << "Failed to create file: " << filename << "\n";
         return;
     }
 
     char file_buffer[1024];
     int bytes = 0;
-    while ((bytes = read(new_socket, file_buffer, 1024)) > 0) {
+    while ((bytes = read(new_socket, file_buffer, sizeof(file_buffer))) > 0) {
         outfile.write(file_buffer, bytes);
     }
-    std::cout << "File uploaded successfully\n";
+
+    std::cout << "File uploaded successfully as " << filename << "\n";
     outfile.close();
 }
 
 void handleDownload(int new_socket) {
     char filename[1024] = {0};
-    read(new_socket, filename, 1024);
-    std::cout << "Sending file: " << filename << std::endl;
+    read(new_socket, filename, 1024);  // Receive filename from client
 
     std::ifstream infile(filename, std::ios::binary);
     if (!infile) {
-        std::cerr << "File not found\n";
+        std::cerr << "File not found: " << filename << "\n";
         return;
     }
 
@@ -43,6 +42,7 @@ void handleDownload(int new_socket) {
     while ((bytes = infile.readsome(file_buffer, sizeof(file_buffer))) > 0) {
         send(new_socket, file_buffer, bytes, 0);
     }
+
     std::cout << "File sent successfully\n";
     infile.close();
 }
@@ -53,49 +53,53 @@ int main() {
     int opt = 1;
     int addrlen = sizeof(address);
 
+    // Create a socket
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
-        perror("Socket failed");
-        exit(EXIT_FAILURE);
+        std::cerr << "Socket creation error\n";
+        return -1;
     }
 
+    // Forcefully attach socket to the port
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
-        perror("setsockopt failed");
-        exit(EXIT_FAILURE);
+        std::cerr << "setsockopt error\n";
+        return -1;
     }
 
+    // Configure server address
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(PORT);
 
+    // Bind the socket
     if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0) {
-        perror("Bind failed");
-        exit(EXIT_FAILURE);
+        std::cerr << "Bind failed\n";
+        return -1;
     }
 
+    // Start listening for incoming connections
     if (listen(server_fd, 3) < 0) {
-        perror("Listen failed");
-        exit(EXIT_FAILURE);
+        std::cerr << "Listen failed\n";
+        return -1;
     }
 
-    while (1) {
-        std::cout << "Waiting for connection...\n";
+    while (true) {
+        std::cout << "Waiting for a connection...\n";
         if ((new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0) {
-            perror("Accept failed");
-            exit(EXIT_FAILURE);
+            std::cerr << "Accept failed\n";
+            return -1;
         }
 
-        char operation[1024] = {0};
-        read(new_socket, operation, 1024);
+        char command[1024] = {0};
+        read(new_socket, command, 1024);  // Read the command (UPLOAD or DOWNLOAD)
 
-        if (strcmp(operation, "UPLOAD") == 0) {
-            handleUpload(new_socket);
-        } else if (strcmp(operation, "DOWNLOAD") == 0) {
-            handleDownload(new_socket);
+        if (strcmp(command, "UPLOAD") == 0) {
+            handleUpload(new_socket);  // Handle file upload
+        } else if (strcmp(command, "DOWNLOAD") == 0) {
+            handleDownload(new_socket);  // Handle file download
         }
 
-        close(new_socket);
+        close(new_socket);  // Close the client connection after each operation
     }
 
-    close(server_fd);
     return 0;
 }
