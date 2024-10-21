@@ -26,7 +26,9 @@ void uploadFile(int sock, const char* filename) {
     while (!infile.eof()) {
         infile.read(file_buffer, sizeof(file_buffer));
         int bytes_read = infile.gcount();
-        send(sock, file_buffer, bytes_read, 0);
+        if (bytes_read > 0) {
+            send(sock, file_buffer, bytes_read, 0);
+        }
     }
 
     std::cout << "File uploaded successfully as " << filename << "\n";
@@ -64,7 +66,7 @@ void downloadFile(int sock, const char* filename) {
 int main() {
     int sock = 0;
     struct sockaddr_in serv_addr;
-    
+
     // Create a socket
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         std::cerr << "Socket creation error\n";
@@ -74,7 +76,7 @@ int main() {
     // Configure the server address
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(PORT);
-    
+
     // Convert IPv4 address from text to binary form
     if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
         std::cerr << "Invalid address/Address not supported\n";
@@ -90,7 +92,18 @@ int main() {
     // Upload a file
     uploadFile(sock, "example.txt");
 
-    // Download the same file (it will be saved as downloaded_example.txt)
+    // Reconnect for download (because the upload closes the socket)
+    close(sock);
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        std::cerr << "Socket creation error\n";
+        return -1;
+    }
+    if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+        std::cerr << "Connection failed\n";
+        return -1;
+    }
+
+    // Download the file (it will be saved as downloaded_example.txt)
     downloadFile(sock, "example.txt");
 
     // Close the socket
