@@ -1,12 +1,17 @@
-# Minimum version of CMake
 cmake_minimum_required(VERSION 3.10)
 
-# Project Name
-project(FTPServerClient)
+# Set the project name
+project(FileTransferServer)
 
-# Set C++ standard
+# Specify the C++ standard
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Add executables for the server and client
-add_executable(server server.cpp)
-add_executable(client client.cpp)
+# Include directories (if any)
+# include_directories(include)
+
+# Source files for the upload/download server
+add_executable(file_transfer_server file_transfer_server.cpp)
+
+# Source files for the file list server
+add_executable(file_list_server file_list_server.cpp)
