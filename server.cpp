@@ -4,21 +4,16 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
 
 #define PORT 8080
-#define SERVER_DIR "server_name/" // Directory to save uploaded files
 
 void handleUpload(int new_socket) {
     char filename[1024] = {0};
     read(new_socket, filename, 1024);  // Receive filename from client
 
-    // Create the full path for the file in the server directory
-    std::string filepath = SERVER_DIR + std::string(filename);
-
-    std::ofstream outfile(filepath, std::ios::binary);
+    std::ofstream outfile(filename, std::ios::binary);
     if (!outfile) {
-        std::cerr << "Failed to create file: " << filepath << "\n";
+        std::cerr << "Failed to create file: " << filename << "\n";
         return;
     }
 
@@ -28,7 +23,7 @@ void handleUpload(int new_socket) {
         outfile.write(file_buffer, bytes);
     }
 
-    std::cout << "File uploaded successfully as " << filepath << "\n";
+    std::cout << "File uploaded successfully as " << filename << "\n";
     outfile.close();
 }
 
@@ -36,12 +31,9 @@ void handleDownload(int new_socket) {
     char filename[1024] = {0};
     read(new_socket, filename, 1024);  // Receive filename from client
 
-    // Create the full path for the file in the server directory
-    std::string filepath = SERVER_DIR + std::string(filename);
-
-    std::ifstream infile(filepath, std::ios::binary);
+    std::ifstream infile(filename, std::ios::binary);
     if (!infile) {
-        std::cerr << "File not found: " << filepath << "\n";
+        std::cerr << "File not found: " << filename << "\n";
         return;
     }
 
@@ -60,9 +52,6 @@ int main() {
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
-
-    // Create the server directory if it doesn't exist
-    mkdir(SERVER_DIR, 0777);
 
     // Create a socket
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
