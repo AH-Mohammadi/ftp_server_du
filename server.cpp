@@ -76,6 +76,23 @@ void handleFileList(int new_socket) {
     }
 }
 
+void handleSearchFile(int new_socket) {
+    char filename[1024] = {0};
+    read(new_socket, filename, 1024);  // Receive filename from client
+
+    // Check if the file exists
+    std::ifstream infile(filename);
+    if (infile) {
+        const char* response = "File found!";
+        send(new_socket, response, strlen(response), 0);
+    } else {
+        const char* response = "File not found!";
+        send(new_socket, response, strlen(response), 0);
+    }
+
+    infile.close();
+}
+
 int main() {
     int server_fd, new_socket;
     struct sockaddr_in address;
@@ -119,7 +136,7 @@ int main() {
         }
 
         char command[1024] = {0};
-        read(new_socket, command, 1024);  // Read the command (UPLOAD, DOWNLOAD, or GET_FILE_LIST)
+        read(new_socket, command, 1024);  // Read the command (UPLOAD, DOWNLOAD, GET_FILE_LIST, SEARCH_FILE)
 
         if (strcmp(command, "UPLOAD") == 0) {
             handleUpload(new_socket);  // Handle file upload
@@ -127,6 +144,8 @@ int main() {
             handleDownload(new_socket);  // Handle file download
         } else if (strcmp(command, "GET_FILE_LIST") == 0) {
             handleFileList(new_socket);  // Handle file list request
+        } else if (strcmp(command, "SEARCH_FILE") == 0) {
+            handleSearchFile(new_socket);  // Handle file search request
         }
 
         close(new_socket);  // Close the client connection after each operation
