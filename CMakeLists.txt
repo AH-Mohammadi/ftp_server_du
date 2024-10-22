@@ -13,6 +13,11 @@ add_executable(server server.cpp)
 # Add executable for the client
 add_executable(client client.cpp)
 
+# Add executable for the file list server
+add_executable(file_list_server file_list_server.cpp)
 
 # Add executable for the file list client
 add_executable(file_list_client file_list_client.cpp)
+
+# Add executable for the file search client
+add_executable(file_search_client file_search_client.cpp)
