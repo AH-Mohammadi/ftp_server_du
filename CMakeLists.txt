@@ -1,20 +1,23 @@
 cmake_minimum_required(VERSION 3.10)
 
-# Set the project name
-project(FileTransferServer)
+# Project name
+project(FTP_Client_Server)
 
-# Specify the C++ standard
+# Set C++ standard
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Add executable for the file transfer server
-add_executable(server server.cpp)
+# Include directories if needed (currently assumes source files are in the same directory)
+include_directories(${CMAKE_SOURCE_DIR})
 
-# Add executable for the client
-add_executable(client client.cpp)
+# Add executable targets
+add_executable(ftp_server ftp_server.cpp)
+add_executable(upload_download_client upload_download_client.cpp)
+add_executable(list_files_client list_files_client.cpp)
+add_executable(find_file_client find_file_client.cpp)
 
-# Add executable for the file list client
-add_executable(file_list_client file_list_client.cpp)
-
-# Add executable for the file search client
-add_executable(file_search_client file_search_client.cpp)
+# Add libraries if necessary (for example, linking to pthread for multithreading)
+# target_link_libraries(ftp_server pthread)
+# target_link_libraries(upload_download_client pthread)
+# target_link_libraries(list_files_client pthread)
+# target_link_libraries(find_file_client pthread)
