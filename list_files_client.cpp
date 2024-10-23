@@ -30,10 +30,15 @@ int main() {
     const char* command = "GET_FILE_LIST";
     send(sock, command, strlen(command), 0);
 
-    char buffer[2048] = {0};
+    char buffer[2048] = {0};  
     int bytes_read = read(sock, buffer, sizeof(buffer));
     if (bytes_read > 0) {
         std::cout << "Files available on the server:\n";
         std::cout << buffer;
     } else {
-        std
+        std::cerr << "Failed to retrieve file list.\n";
+    }
+
+    close(sock);
+    return 0;
+}
