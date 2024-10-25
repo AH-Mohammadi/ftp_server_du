@@ -1,20 +1,23 @@
-#include <iostream>
-#include <unistd.h>
-#include <cstring>
-#include <sys/socket.h>
-#include <arpa/inet.h>
+cmake_minimum_required(VERSION 3.10)
 
-void handleDeleteFile(int new_socket) {
-    char filename[1024] = {0};
-    read(new_socket, filename, 1024);  // Receive filename from client
+# Set the project name
+project(FileTransferServer)
 
-    if (remove(filename) == 0) {
-        const char* response = "File deleted successfully!";
-        send(new_socket, response, strlen(response), 0);
-        std::cout << "Deleted file: " << filename << "\n";
-    } else {
-        const char* response = "File deletion failed!";
-        send(new_socket, response, strlen(response), 0);
-        std::cerr << "Failed to delete file: " << filename << "\n";
-    }
-}
+# Specify the C++ standard
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+# Add executable for the file transfer server, linking delete_file.cpp
+add_executable(server server.cpp delete_file.cpp)
+
+# Add executable for the main client
+add_executable(client client.cpp)
+
+# Add executable for the file list client
+add_executable(file_list_client file_list_client.cpp)
+
+# Add executable for the file search client
+add_executable(file_search_client file_search_client.cpp)
+
+# Add executable for the delete file client
+add_executable(delete_file_client delete_file_client.cpp)
