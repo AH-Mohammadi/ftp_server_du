@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Add executable for the file transfer server, linking delete_file.cpp
-add_executable(server server.cpp delete_file.cpp)
+add_executable(server server.cpp)
 
 # Add executable for the main client
 add_executable(client client.cpp)
