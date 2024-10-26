@@ -1,23 +1,58 @@
-cmake_minimum_required(VERSION 3.10)
+#include <iostream>
+#include <cstring>
+#include <unistd.h>
+#include <arpa/inet.h>
 
-# Set the project name
-project(FileTransferServer)
+#define PORT 8080
 
-# Specify the C++ standard
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+int main() {
+    int sock = 0;
+    struct sockaddr_in serv_addr;
 
-# Add executable for the file transfer server, linking delete_file.cpp
-add_executable(server server.cpp delete_file.cpp)
+    // Create a socket
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        std::cerr << "Socket creation error\n";
+        return -1;
+    }
 
-# Add executable for the main client
-add_executable(client client.cpp)
+    // Configure the server address
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
 
-# Add executable for the file list client
-add_executable(file_list_client file_list_client.cpp)
+    // Convert IPv4 address from text to binary form
+    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
+        std::cerr << "Invalid address/Address not supported\n";
+        return -1;
+    }
 
-# Add executable for the file search client
-add_executable(file_search_client file_search_client.cpp)
+    // Connect to the server
+    if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+        std::cerr << "Connection failed\n";
+        return -1;
+    }
 
-# Add executable for the delete file client
-add_executable(delete_file_client delete_file_client.cpp)
+    // Send the DELETE_FILE command to the server
+    const char* command = "DELETE_FILE";
+    send(sock, command, strlen(command), 0);
+
+    // Get the filename to delete
+    std::string filename;
+    std::cout << "Enter the filename to delete: ";
+    std::getline(std::cin, filename);
+
+    // Send the filename to the server
+    send(sock, filename.c_str(), filename.length(), 0);
+
+    // Receive the response from the server
+    char buffer[1024] = {0};
+    int bytes_read = read(sock, buffer, sizeof(buffer));
+    if (bytes_read > 0) {
+        std::cout << "Server response: " << buffer << "\n";
+    } else {
+        std::cerr << "Failed to receive response\n";
+    }
+
+    // Close the socket
+    close(sock);
+    return 0;
+}
