@@ -7,6 +7,34 @@
 
 #define PORT 8080
 
+void downloadFile(int sock, const char* filename) {
+    // Send download request
+    send(sock, "DOWNLOAD", strlen("DOWNLOAD"), 0);
+
+    // Send the filename to download
+    send(sock, filename, strlen(filename), 0);
+
+    // Prepare the new filename for download (with a different name)
+    std::string newFilename = "downloaded_" + std::string(filename);
+
+    // Open a file to save the downloaded content
+    std::ofstream outfile(newFilename, std::ios::binary);
+    if (!outfile) {
+        std::cerr << "Failed to create file: " << newFilename << "\n";
+        return;
+    }
+
+    // Receive data from the server and write it to the file
+    char file_buffer[1024];
+    int bytes = 0;
+    while ((bytes = read(sock, file_buffer, sizeof(file_buffer))) > 0) {
+        outfile.write(file_buffer, bytes);
+    }
+
+    std::cout << "File downloaded successfully as " << newFilename << "\n";
+    outfile.close();
+}
+
 void uploadFile(int sock, const char* filename) {
     // Send upload request
     send(sock, "UPLOAD", strlen("UPLOAD"), 0);
@@ -35,33 +63,6 @@ void uploadFile(int sock, const char* filename) {
     infile.close();
 }
 
-void downloadFile(int sock, const char* filename) {
-    // Send download request
-    send(sock, "DOWNLOAD", strlen("DOWNLOAD"), 0);
-
-    // Send the filename to download
-    send(sock, filename, strlen(filename), 0);
-
-    // Prepare the new filename for download (with a different name)
-    std::string newFilename = "downloaded_" + std::string(filename);
-
-    // Open a file to save the downloaded content
-    std::ofstream outfile(newFilename, std::ios::binary);
-    if (!outfile) {
-        std::cerr << "Failed to create file: " << newFilename << "\n";
-        return;
-    }
-
-    // Receive data from the server and write it to the file
-    char file_buffer[1024];
-    int bytes = 0;
-    while ((bytes = read(sock, file_buffer, sizeof(file_buffer))) > 0) {
-        outfile.write(file_buffer, bytes);
-    }
-
-    std::cout << "File downloaded successfully as " << newFilename << "\n";
-    outfile.close();
-}
 
 int main() {
     int sock = 0;
