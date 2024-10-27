@@ -9,25 +9,7 @@
 
 #define PORT 8080
 
-void handleUpload(int new_socket) {
-    char filename[1024] = {0};
-    read(new_socket, filename, 1024);
 
-    std::ofstream outfile(filename, std::ios::binary);
-    if (!outfile) {
-        std::cerr << "Failed to create file: " << filename << "\n";
-        return;
-    }
-
-    char file_buffer[1024];
-    int bytes = 0;
-    while ((bytes = read(new_socket, file_buffer, sizeof(file_buffer))) > 0) {
-        outfile.write(file_buffer, bytes);
-    }
-
-    std::cout << "File uploaded successfully as " << filename << "\n";
-    outfile.close();
-}
 
 void handleDownload(int new_socket) {
     char filename[1024] = {0};
@@ -49,6 +31,39 @@ void handleDownload(int new_socket) {
     infile.close();
 }
 
+void handleUpload(int new_socket) {
+    char filename[1024] = {0};
+    read(new_socket, filename, 1024);
+
+    std::ofstream outfile(filename, std::ios::binary);
+    if (!outfile) {
+        std::cerr << "Failed to create file: " << filename << "\n";
+        return;
+    }
+
+    char file_buffer[1024];
+    int bytes = 0;
+    while ((bytes = read(new_socket, file_buffer, sizeof(file_buffer))) > 0) {
+        outfile.write(file_buffer, bytes);
+    }
+
+    std::cout << "File uploaded successfully as " << filename << "\n";
+    outfile.close();
+}
+void handleDeleteFile(int new_socket) {
+    char filename[1024] = {0};
+    read(new_socket, filename, 1024);
+
+    if (remove(filename) == 0) {
+        const char* response = "File deleted successfully.";
+        send(new_socket, response, strlen(response), 0);
+        std::cout << "Deleted file: " << filename << "\n";
+    } else {
+        const char* response = "Failed to delete file.";
+        send(new_socket, response, strlen(response), 0);
+        std::cerr << "Error deleting file: " << filename << "\n";
+    }
+}
 void handleFileList(int new_socket) {
     const char* directoryPath = ".";
     DIR* dir;
@@ -82,20 +97,7 @@ void handleSearchFile(int new_socket) {
     infile.close();
 }
 
-void handleDeleteFile(int new_socket) {
-    char filename[1024] = {0};
-    read(new_socket, filename, 1024);
 
-    if (remove(filename) == 0) {
-        const char* response = "File deleted successfully.";
-        send(new_socket, response, strlen(response), 0);
-        std::cout << "Deleted file: " << filename << "\n";
-    } else {
-        const char* response = "Failed to delete file.";
-        send(new_socket, response, strlen(response), 0);
-        std::cerr << "Error deleting file: " << filename << "\n";
-    }
-}
 
 int main() {
     int server_fd, new_socket;
