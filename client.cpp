@@ -91,7 +91,7 @@ int main() {
     }
 
     // Upload a file
-    uploadFile(sock, "example.txt");
+    uploadFile(sock, "abcd.cpp");
 
     // Reconnect for download (because the upload closes the socket)
     close(sock);
@@ -105,7 +105,7 @@ int main() {
     }
 
     // Download the file (it will be saved as downloaded_example.txt)
-    downloadFile(sock, "example.txt");
+    downloadFile(sock, "acbd.cpp");
 
     // Close the socket
     close(sock);
